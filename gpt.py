@@ -35,11 +35,10 @@ def voice_transcription(audio_file: str):
             transcript = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio,
-                response_format="text",
-
+                response_format="text"
             )
-        # Aseguramos que la respuesta es un diccionario y obtenemos el campo 'text'
-        return transcript['text'] if 'text' in transcript else transcript
+        # La API ahora devuelve directamente el texto
+        return str(transcript)
     except Exception as e:
         print(f"Error al transcribir el audio: {e}")
         return ""

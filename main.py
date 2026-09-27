@@ -48,7 +48,7 @@ ai_text_file = f"ai_text_notes/{nombre_del_archivo}.txt"
 resumen_file = f"keypoints/{nombre_del_archivo}_keypoints.md"
 
 # Crear directorios si no existen
-crear_directorios([text_file, ai_text_file])
+crear_directorios([text_file, ai_text_file, resumen_file])
 segment_files: list = []
 
 try:
@@ -62,16 +62,20 @@ try:
             for segment_file in segment_files:
                 original_text = voice_transcription(segment_file)
                 with open(text_file, "a", encoding='utf-8') as file:
-                    file.write(original_text)
+                    file.write(original_text + "\n")
                 pbar.update(1)
         print(f"Texto original guardado en archivo: {text_file}")
 
     # Comprobar si el archivo de script ya existe
     if args.script and not os.path.exists(ai_text_file):
         print("Creando script...")
+        if not os.path.exists(text_file):
+            print("Error: No existe el archivo de transcripción. Primero debes transcribir el audio.")
+            exit(1)
         with open(text_file, 'r', encoding='utf-8') as file:
             original_text = file.read()
         ai_text = create_script(original_text, args.tone, args.duracion)
+        print("AI Text generated")
         with open(ai_text_file, "w", encoding='utf-8') as file:
             file.write(ai_text)
         print(f"Texto con AI guardado en archivo: {ai_text_file}")
@@ -79,16 +83,27 @@ try:
     # Si se solicitó extraer puntos clave
     if args.keypoints:
         print("Extrayendo puntos clave...")
+        if not os.path.exists(text_file):
+            print("Error: No existe el archivo de transcripción. Primero debes transcribir el audio.")
+            exit(1)
         with open(text_file, 'r', encoding='utf-8') as file:
             original_text = file.read()
         key_points = extract_key_points(original_text)
-        crear_directorios([resumen_file])
         with open(resumen_file, "w", encoding='utf-8') as file:
             file.write(key_points)
         print(f"Puntos clave guardados en archivo: {resumen_file}")
         
     if args.notion:
         print("Guardando en Notion...")
+        if not os.path.exists(ai_text_file):
+            print("Error: No existe el archivo de script. Primero debes generar el script.")
+            exit(1)
+        if not os.path.exists(text_file):
+            print("Error: No existe el archivo de transcripción. Primero debes transcribir el audio.")
+            exit(1)
+        if not os.path.exists(resumen_file):
+            print("Error: No existe el archivo de puntos clave. Primero debes extraer los puntos clave.")
+            exit(1)
         with open(ai_text_file, 'r', encoding='utf-8') as file:
             script = file.read()
         with open(text_file, 'r', encoding='utf-8') as file:
